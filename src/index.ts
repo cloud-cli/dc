@@ -1,11 +1,12 @@
 import { getConfig, init } from "@cloud-cli/cli";
 import { exec } from "@cloud-cli/exec";
 import { existsSync, mkdirSync } from "node:fs";
-import { readdir, rm, writeFile } from "node:fs/promises";
+import { readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const config = getConfig("dc", { storagePath: "docker-compose" });
 const storagePath = join(process.cwd(), config.storagePath);
+const notFoundError = new Error("Service not found");
 
 interface CliOptions {
   name: string;
@@ -27,7 +28,7 @@ async function stop(options: CliOptions) {
   const path = getPath(name);
 
   if (!existsSync(path)) {
-    throw new Error("Service not found");
+    throw notFoundError;
   }
 
   const out = await exec("docker compose", ["down", "-f", path]);
@@ -44,7 +45,7 @@ async function start(options: CliOptions) {
   const path = getPath(name);
 
   if (!existsSync(path)) {
-    throw new Error("Service not found");
+    throw notFoundError;
   }
 
   const out = await exec("docker compose", ["up", "-f", path]);
@@ -85,6 +86,18 @@ async function list() {
   return files.filter((f) => f.isFile()).map((f) => f.name.replace(".yml", ""));
 }
 
+async function show(options: CliOptions) {
+  const name = checkName(options.name);
+  const path = getPath(name);
+
+  if (existsSync(path)) {
+    const content = await readFile(path, "utf-8");
+    return { name, content };
+  }
+
+  throw notFoundError;
+}
+
 export default {
   [init]() {
     mkdirSync(storagePath, { recursive: true });
@@ -93,5 +106,6 @@ export default {
   stop,
   update,
   remove,
+  show,
   list,
 };
