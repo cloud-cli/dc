@@ -7,6 +7,10 @@ import { join } from "node:path";
 const config = getConfig("dc", { storagePath: "docker-compose" });
 const storagePath = join(process.cwd(), config.storagePath);
 const notFoundError = new Error("Service not found");
+const binaryAndArgs = {
+  binary: "",
+  args: [],
+};
 
 interface CliOptions {
   name: string;
@@ -31,7 +35,10 @@ async function stop(options: CliOptions) {
     throw notFoundError;
   }
 
-  const out = await exec("docker", ["compose", "-f", path, "down"]);
+  const out = await exec(
+    binaryAndArgs.binary,
+    [...binaryAndArgs.args, "-f", path, "down"].filter(Boolean)
+  );
 
   if (out.ok) {
     return true;
@@ -48,7 +55,10 @@ async function start(options: CliOptions) {
     throw notFoundError;
   }
 
-  const out = await exec("docker", ["compose", "-f", path, "up"]);
+  const out = await exec(
+    binaryAndArgs.binary,
+    [...binaryAndArgs.args, "-f", path, "up", "-d"].filter(Boolean)
+  );
 
   if (out.ok) {
     return true;
@@ -99,8 +109,24 @@ async function show(options: CliOptions) {
 }
 
 export default {
-  [init]() {
+  async [init]() {
     mkdirSync(storagePath, { recursive: true });
+
+    const docker = await exec("docker", ["compose", "--help"]);
+    if (docker.ok) {
+      binaryAndArgs.binary = "docker";
+      binaryAndArgs.args.push("compose");
+      return;
+    }
+
+    const dockerCompose = await exec("docker-compose", ["--help"]);
+    if (dockerCompose.ok) {
+      binaryAndArgs.binary = "docker-compose";
+      return;
+    }
+
+    binaryAndArgs.binary = "exit";
+    binaryAndArgs.args.push("1");
   },
   start,
   stop,
