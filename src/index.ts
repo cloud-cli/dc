@@ -112,14 +112,14 @@ export default {
   async [init]() {
     mkdirSync(storagePath, { recursive: true });
 
-    const docker = await exec("docker", ["compose", "--help"]);
+    const docker = await exec("docker", ["compose"]);
     if (docker.ok) {
       binaryAndArgs.binary = "docker";
       binaryAndArgs.args.push("compose");
       return;
     }
 
-    const dockerCompose = await exec("docker-compose", ["--help"]);
+    const dockerCompose = await exec("docker-compose", ["-f"]);
     if (dockerCompose.ok) {
       binaryAndArgs.binary = "docker-compose";
       return;
