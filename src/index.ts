@@ -31,7 +31,7 @@ async function stop(options: CliOptions) {
     throw notFoundError;
   }
 
-  const out = await exec("docker compose", ["down", "-f", path]);
+  const out = await exec("docker", ["compose", "down", "-f", path]);
 
   if (out.ok) {
     return true;
@@ -48,7 +48,7 @@ async function start(options: CliOptions) {
     throw notFoundError;
   }
 
-  const out = await exec("docker compose", ["up", "-f", path]);
+  const out = await exec("docker", ["compose", "up", "-f", path]);
 
   if (out.ok) {
     return true;
