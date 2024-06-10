@@ -119,7 +119,7 @@ export default {
       return;
     }
 
-    const dockerCompose = await exec("docker-compose", ["-f"]);
+    const dockerCompose = await exec("docker-compose", ["--help"]);
     if (dockerCompose.ok) {
       binaryAndArgs.binary = "docker-compose";
       return;
