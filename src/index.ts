@@ -1,4 +1,4 @@
-import { getConfig, init } from '@cloud-cli/cli';
+import { getConfig, init, help } from '@cloud-cli/cli';
 import { exec } from '@cloud-cli/exec';
 import { existsSync, mkdirSync } from 'node:fs';
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
@@ -122,21 +122,19 @@ export default {
     binaryAndArgs.binary = 'exit';
     binaryAndArgs.args.push('1');
   },
-  help: () => ({
-    description: 'Manage Docker Compose services',
-    commands: {
-      'dc up [name]': 'Start services (optional name to start specific service)',
-      'dc down [name]': 'Stop services (optional name to stop specific service)',
-      'dc list': 'List Compose files/services',
-      'dc show [name]': 'Show content of a Compose file',
-      'dc set [name]': 'Update content of a Compose file',
-      'dc remove [name]': 'Remove a Compose file',
-    },
-    options: {
-      name: 'Service/Compose file name',
-      content: 'Docker Compose YAML content (for set command)',
-    },
-  }),
+  [help]: () => `Manage Docker Compose services
+
+Available commands:
+  start - Start services (optional name to start specific service)
+  stop - Stop services (optional name to stop specific service)
+  update - Update Docker Compose services
+  remove - Remove a Compose file
+  show - Show content of a Compose file
+  list - List Compose files/services
+
+Options:
+  name - Service/Compose file name
+  content - Docker Compose YAML content (for update command)`,
   start,
   stop,
   update,
