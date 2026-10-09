@@ -1,14 +1,14 @@
-import { getConfig, init, help } from '@cloud-cli/cli';
-import { exec } from '@cloud-cli/exec';
-import { existsSync, mkdirSync } from 'node:fs';
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { getConfig, init, help } from "@cloud-cli/cli";
+import { exec } from "@cloud-cli/exec";
+import { existsSync, mkdirSync } from "node:fs";
+import { readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
-const config = getConfig('dc', { storagePath: 'docker-compose' });
+const config = getConfig("dc", { storagePath: "docker-compose" });
 const storagePath = join(process.cwd(), config.storagePath);
-const notFoundError = new Error('Service not found');
+const notFoundError = new Error("Service not found");
 const binaryAndArgs = {
-  binary: '',
+  binary: "",
   args: [],
 };
 
@@ -17,10 +17,10 @@ interface CliOptions {
   content?: string;
 }
 
-const getPath = (name) => join(storagePath, name + '.yml');
+const getPath = (name) => join(storagePath, name + ".yml");
 const checkName = (name) => {
   if (!name) {
-    throw new Error('Name is required');
+    throw new Error("Name is required");
   }
 
   // TODO sanitize file name
@@ -35,7 +35,7 @@ async function stop(options: CliOptions) {
     throw notFoundError;
   }
 
-  const out = await exec(binaryAndArgs.binary, [...binaryAndArgs.args, '-f', path, 'down'].filter(Boolean));
+  const out = await exec(binaryAndArgs.binary, [...binaryAndArgs.args, "-f", path, "down"].filter(Boolean));
 
   if (out.ok) {
     return true;
@@ -52,7 +52,7 @@ async function start(options: CliOptions) {
     throw notFoundError;
   }
 
-  const out = await exec(binaryAndArgs.binary, [...binaryAndArgs.args, '-f', path, 'up', '-d'].filter(Boolean));
+  const out = await exec(binaryAndArgs.binary, [...binaryAndArgs.args, "-f", path, "up", "-d"].filter(Boolean));
 
   if (out.ok) {
     return true;
@@ -66,7 +66,7 @@ async function update(options: CliOptions) {
   const { content } = options;
 
   if (!content) {
-    throw new Error('docker compose content is required');
+    throw new Error("docker compose content is required");
   }
 
   const path = getPath(name);
@@ -87,7 +87,7 @@ async function remove(options: CliOptions) {
 
 async function list() {
   const files = await readdir(storagePath, { withFileTypes: true });
-  return files.filter((f) => f.isFile()).map((f) => f.name.replace('.yml', ''));
+  return files.filter((f) => f.isFile()).map((f) => f.name.replace(".yml", ""));
 }
 
 async function show(options: CliOptions) {
@@ -95,7 +95,7 @@ async function show(options: CliOptions) {
   const path = getPath(name);
 
   if (existsSync(path)) {
-    const content = await readFile(path, 'utf-8');
+    const content = await readFile(path, "utf-8");
     return { name, content };
   }
 
@@ -106,31 +106,31 @@ export default {
   async [init]() {
     mkdirSync(storagePath, { recursive: true });
 
-    const docker = await exec('docker', ['compose']);
+    const docker = await exec("docker", ["compose"]);
     if (docker.ok) {
-      binaryAndArgs.binary = 'docker';
-      binaryAndArgs.args.push('compose');
+      binaryAndArgs.binary = "docker";
+      binaryAndArgs.args.push("compose");
       return;
     }
 
-    const dockerCompose = await exec('docker-compose', ['--help']);
+    const dockerCompose = await exec("docker-compose", ["--help"]);
     if (dockerCompose.ok) {
-      binaryAndArgs.binary = 'docker-compose';
+      binaryAndArgs.binary = "docker-compose";
       return;
     }
 
-    binaryAndArgs.binary = 'exit';
-    binaryAndArgs.args.push('1');
+    binaryAndArgs.binary = "exit";
+    binaryAndArgs.args.push("1");
   },
   [help]: () => `Manage Docker Compose services
 
 Available commands:
-  start - Start services (optional name to start specific service)
-  stop - Stop services (optional name to stop specific service)
-  update - Update Docker Compose services
-  remove - Remove a Compose file
-  show - Show content of a Compose file
-  list - List Compose files/services
+  dc.start --name <name> - Start a Compose service
+  dc.stop --name <name> - Stop a Compose service
+  dc.update --name <name> --content <yaml> - Create or update a Compose file
+  dc.remove --name <name> - Remove a Compose file
+  dc.show --name <name> - Show a Compose file
+  dc.list - List Compose files/services
 
 Options:
   name - Service/Compose file name
